@@ -1,5 +1,3 @@
-A este codigo:
-
 import streamlit as st
 import json
 import os
@@ -169,3 +167,4 @@ for fila in range(4):
 st.subheader("🗂 Historial del mes")
 for h in historial:
     st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}") 
+
