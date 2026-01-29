@@ -51,7 +51,7 @@ def guardar(data):
 def nuevo_panel():
     return {f"{i:02d}": [] for i in range(100)}
 
-# 👉 CONTEO GENERAL (SOLO PRIMERA POSICIÓN)
+# 👉 CONTEO GENERAL SOLO PRIMERA POSICIÓN
 def conteo_general_primera(numero, data):
     total = 0
     for lot, meses in data.items():
@@ -78,6 +78,9 @@ fecha_str = fecha.strftime("%d/%m/%Y")
 if loteria == "General":
 
     st.subheader("🌐 Control General de Todas las Loterías")
+
+    if "num_general" not in st.session_state:
+        st.session_state.num_general = None
 
     @st.dialog("Detalle del número")
     def mostrar_detalle(numero):
@@ -109,27 +112,21 @@ if loteria == "General":
             else:
                 color = "#e74c3c"   # rojo
 
+            if cols[col].button(
+                n,
+                key=f"g_{n}",
+                help=f"Salidas en primera posición: {c}"
+            ):
+                st.session_state.num_general = n
+
             cols[col].markdown(
-                f"""
-                <a href="?num={n}" style="
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    height:36px;
-                    background:{color};
-                    border-radius:6px;
-                    font-weight:bold;
-                    text-decoration:none;
-                    color:black;">
-                    {n}
-                </a>
-                """,
+                f"<style>div[data-testid='stButton'] > button[key='g_{n}'] {{background:{color};}}</style>",
                 unsafe_allow_html=True
             )
 
-    query = st.query_params
-    if "num" in query:
-        mostrar_detalle(query["num"])
+    if st.session_state.num_general:
+        mostrar_detalle(st.session_state.num_general)
+        st.session_state.num_general = None
 
     st.stop()
 
@@ -168,7 +165,7 @@ if st.button("Guardar resultado"):
         st.success("Resultado guardado correctamente")
         st.rerun()
 
-    except Exception as e:
+    except Exception:
         st.error("Formato inválido")
 
 if st.button("🗑️ Eliminar último resultado"):
