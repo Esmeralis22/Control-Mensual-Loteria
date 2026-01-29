@@ -1,3 +1,5 @@
+A este codigo:
+
 import streamlit as st
 import json
 import os
@@ -51,21 +53,12 @@ def guardar(data):
 def nuevo_panel():
     return {f"{i:02d}": [] for i in range(100)}
 
-def conteo_general_primera(numero, data):
-    total = 0
-    for lot, meses in data.items():
-        for mes, info in meses.items():
-            for h in info["historial"]:
-                nums = h["resultado"].split("-")
-                if nums and nums[0] == numero:
-                    total += 1
-    return total
-
 # ================= UI =================
 st.set_page_config(layout="wide")
 st.title("📊 Control Mensual de Loterías")
 
 data = cargar()
+
 loteria = st.selectbox("Selecciona la lotería", LOTERIAS)
 
 fecha = datetime.now()
@@ -77,9 +70,6 @@ if loteria == "General":
 
     st.subheader("🌐 Control General de Todas las Loterías")
 
-    if "num_general" not in st.session_state:
-        st.session_state.num_general = None
-
     @st.dialog("Detalle del número")
     def mostrar_detalle(numero):
         encontrado = False
@@ -87,12 +77,12 @@ if loteria == "General":
             for mes, info in meses.items():
                 for h in info["historial"]:
                     nums = h["resultado"].split("-")
-                    if numero in nums:
-                        pos = nums.index(numero)
-                        st.write(
-                            f"🎯 **{lot}** | 📅 {h['fecha']} | 📍 {POSICION[pos]}"
-                        )
-                        encontrado = True
+                    for i, n in enumerate(nums):
+                        if n == numero:
+                            st.write(
+                                f"🎯 **{lot}** | 📅 {h['fecha']} | 📍 {POSICION[i]}"
+                            )
+                            encontrado = True
         if not encontrado:
             st.info("Este número no ha salido en ninguna lotería.")
 
@@ -100,48 +90,8 @@ if loteria == "General":
         cols = st.columns(25)
         for col in range(25):
             n = f"{fila*25 + col:02d}"
-            c = conteo_general_primera(n, data)
-
-            if c <= 2:
-                color = "#2ecc71"
-            elif c <= 4:
-                color = "#f39c12"
-            else:
-                color = "#e74c3c"
-
-            if cols[col].markdown(
-                f"""
-                <div
-                    style="
-                        height:36px;
-                        background:{color};
-                        border-radius:6px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-weight:bold;
-                        cursor:pointer;"
-                    onclick="window.parent.postMessage('{n}', '*')">
-                    {n}
-                </div>
-                """,
-                unsafe_allow_html=True
-            ):
-                pass
-
-    st.markdown("""
-    <script>
-    window.addEventListener("message", (e) => {
-        if (e.data) {
-            window.parent.postMessage({ type: "streamlit:setState", value: e.data }, "*");
-        }
-    });
-    </script>
-    """, unsafe_allow_html=True)
-
-    if "clicked" in st.session_state:
-        mostrar_detalle(st.session_state.clicked)
-        del st.session_state.clicked
+            if cols[col].button(n, key=f"g_{n}"):
+                mostrar_detalle(n)
 
     st.stop()
 
@@ -178,9 +128,8 @@ if st.button("Guardar resultado"):
 
         guardar(data)
         st.success("Resultado guardado correctamente")
-        st.rerun()
 
-    except Exception:
+    except:
         st.error("Formato inválido")
 
 if st.button("🗑️ Eliminar último resultado"):
@@ -199,11 +148,12 @@ st.subheader("📌 Panel mensual 00–99")
 def celda(num):
     puntos = ""
     for m in panel[num]:
-        puntos += f"<span style='color:{COLORES[m]};font-size:10px;'>●</span>"
+        puntos += f"<span style='color:{COLORES[m]};font-size:10px;line-height:10px;'>●</span>"
+
     return f"""
     <div style="height:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <div style="font-weight:bold;">{num}</div>
-        <div>{puntos}</div>
+        <div style="font-weight:bold;line-height:14px;">{num}</div>
+        <div style="height:12px;line-height:12px;">{puntos}</div>
     </div>
     """
 
@@ -212,12 +162,10 @@ for fila in range(4):
     for col in range(25):
         n = f"{fila*25 + col:02d}"
         cols[col].markdown(
-            f"<div style='border:1px solid #ccc;height:46px'>{celda(n)}</div>",
+            f"<div style='border:1px solid #ccc;height:46px;text-align:center;padding-top:3px'>{celda(n)}</div>",
             unsafe_allow_html=True
         )
 
 st.subheader("🗂 Historial del mes")
 for h in historial:
-    st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}")
-
-
+    st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}") 
