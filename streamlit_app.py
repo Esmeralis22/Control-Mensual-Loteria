@@ -85,13 +85,51 @@ if loteria == "General":
             st.info("Este número no ha salido en ninguna lotería.")
 
     for fila in range(4):
-        cols = st.columns(25)
-        for col in range(25):
-            n = f"{fila*25 + col:02d}"
-            if cols[col].button(n, key=f"g_{n}"):
-                mostrar_detalle(n)
+    cols = st.columns(25)
+    for col in range(25):
+        n = f"{fila*25 + col:02d}"
+
+        c = conteo_general_primera(n)
+
+        if c <= 2:
+            color = "#2ecc71"   # verde
+        elif c <= 4:
+            color = "#f39c12"   # naranja
+        else:
+            color = "#e74c3c"   # rojo
+
+        if cols[col].markdown(
+            f"""
+            <a href="?num={n}" style="
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                height:36px;
+                background:{color};
+                border-radius:6px;
+                font-weight:bold;
+                text-decoration:none;
+                color:black;">
+                {n}
+            </a>
+            """,
+            unsafe_allow_html=True
+        ):
+            pass
+
 
     st.stop()
+
+def conteo_general_primera(numero):
+    total = 0
+    for lot, meses in data.items():
+        for mes, info in meses.items():
+            for h in info["historial"]:
+                nums = h["resultado"].split("-")
+                if nums and nums[0] == numero:  # SOLO primera posición
+                    total += 1
+    return total
+
 
 # ================= LOTERÍAS NORMALES =================
 data.setdefault(loteria, {})
@@ -167,3 +205,4 @@ for fila in range(4):
 st.subheader("🗂 Historial del mes")
 for h in historial:
     st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}")
+
