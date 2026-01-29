@@ -95,41 +95,39 @@ if st.button("🗑️ Eliminar último resultado"):
     else:
         st.info("No hay resultados para eliminar")
 
-# ================= PANEL COMPLETO (FIJO) =================
+# ================= PANEL COMPLETO =================
 st.subheader("📌 Panel mensual 00–99")
 
 def celda(num):
     marcas = panel[num]
     puntos = ""
     for m in marcas:
-        puntos += f"<span style='color:{COLORES[m]}; font-size:10px;'>●</span>"
-    return f"""
-        <div style="font-size:12px; font-weight:bold;">{num}</div>
-        <div style="
-            height:12px;
-            line-height:12px;
-            white-space:nowrap;
-            overflow:hidden;
-        ">
-            {puntos}
-        </div>
-    """
+        puntos += (
+            f"<span style='color:{COLORES[m]};"
+            f"font-size:9px;"
+            f"margin-right:1px;'>●</span>"
+        )
+
+    return (
+        f"<span style='font-size:12px; font-weight:bold;'>{num}</span><br>"
+        f"<span style='display:inline-block;"
+        f"height:10px;"
+        f"line-height:10px;"
+        f"white-space:nowrap;"
+        f"overflow:hidden;'>{puntos}</span>"
+    )
 
 for fila in range(4):
     cols = st.columns(25)
     for col in range(25):
         n = f"{fila*25 + col:02d}"
         cols[col].markdown(
-            f"""
-            <div style="
-                border:1px solid #ccc;
-                height:45px;
-                text-align:center;
-                padding-top:4px;
-            ">
-                {celda(n)}
-            </div>
-            """,
+            f"<div style='border:1px solid #ccc;"
+            f"height:45px;"
+            f"text-align:center;"
+            f"padding-top:4px;"
+            f"overflow:hidden;'>"
+            f"{celda(n)}</div>",
             unsafe_allow_html=True
         )
 
