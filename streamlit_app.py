@@ -2,6 +2,9 @@ import streamlit as st
 import json
 import os
 from datetime import datetime
+import pandas as pd
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
 
 # ================= LOGIN =================
 if "login_ok" not in st.session_state:
@@ -166,5 +169,66 @@ for fila in range(4):
 
 st.subheader("🗂 Historial del mes")
 for h in historial:
-    st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}") 
+    st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}")
+
+# ================= DESCARGAS (NUEVO) =================
+st.subheader("📥 Descargas")
+
+meses_disponibles = []
+for lot, meses in data.items():
+    for m in meses.keys():
+        meses_disponibles.append(m)
+
+meses_disponibles = sorted(set(meses_disponibles))
+
+mes_descarga = st.selectbox("Selecciona el mes a descargar", meses_disponibles)
+formato = st.selectbox("Formato", ["Excel", "PDF"])
+
+def generar_datos_mes(mes):
+    filas = []
+    for lot, meses in data.items():
+        if mes in meses:
+            for h in meses[mes]["historial"]:
+                filas.append({
+                    "Lotería": lot,
+                    "Resultado": h["resultado"],
+                    "Fecha": h["fecha"]
+                })
+    return filas
+
+if st.button("📤 Generar archivo"):
+    registros = generar_datos_mes(mes_descarga)
+
+    if not registros:
+        st.warning("No hay datos para ese mes.")
+    else:
+        df = pd.DataFrame(registros)
+
+        if formato == "Excel":
+            nombre = f"loterias_{mes_descarga}.xlsx"
+            df.to_excel(nombre, index=False)
+            with open(nombre, "rb") as f:
+                st.download_button(
+                    "⬇️ Descargar Excel",
+                    f,
+                    file_name=nombre
+                )
+
+        else:
+            nombre = f"loterias_{mes_descarga}.pdf"
+            pdf = SimpleDocTemplate(nombre)
+            tabla = Table([df.columns.tolist()] + df.values.tolist())
+            tabla.setStyle(TableStyle([
+                ("GRID", (0,0), (-1,-1), 1, colors.black),
+                ("BACKGROUND", (0,0), (-1,0), colors.lightgrey)
+            ]))
+            pdf.build([tabla])
+
+            with open(nombre, "rb") as f:
+                st.download_button(
+                    "⬇️ Descargar PDF",
+                    f,
+                    file_name=nombre
+                )
+
 
