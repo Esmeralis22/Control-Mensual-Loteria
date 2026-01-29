@@ -91,7 +91,7 @@ if st.button("🗑️ Eliminar último resultado"):
 
         guardar(data)
         st.warning("Último resultado eliminado")
-        st.experimental_rerun()
+        st.rerun()
     else:
         st.info("No hay resultados para eliminar")
 
@@ -119,3 +119,4 @@ st.subheader("🗂 Historial del mes")
 
 for h in historial:
     st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}")
+
