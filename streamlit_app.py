@@ -169,7 +169,7 @@ if st.button("Guardar resultado"):
         st.rerun()
 
     except Exception as e:
-    st.error("Formato inválido")
+        st.error("Formato inválido")
 
 if st.button("🗑️ Eliminar último resultado"):
     if historial:
@@ -207,5 +207,6 @@ for fila in range(4):
 st.subheader("🗂 Historial del mes")
 for h in historial:
     st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}")
+
 
 
