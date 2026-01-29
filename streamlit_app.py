@@ -68,6 +68,25 @@ if loteria == "General":
 
     st.subheader("🌐 Control General de Todas las Loterías")
 
+    def conteo_primera_posicion(numero):
+        total = 0
+        for lot, meses in data.items():
+            for mes, info in meses.items():
+                if mes != mes_key:
+                    continue
+                for h in info["historial"]:
+                    nums = h["resultado"].split("-")
+                    if nums[0] == numero:
+                        total += 1
+        return total
+
+    def color_por_conteo(c):
+        if c <= 2:
+            return "#2e7d32"   # verde
+        elif c <= 4:
+            return "#f9a825"   # naranja
+        return "#c62828"       # rojo
+
     @st.dialog("Detalle del número")
     def mostrar_detalle(numero):
         encontrado = False
@@ -75,19 +94,34 @@ if loteria == "General":
             for mes, info in meses.items():
                 for h in info["historial"]:
                     nums = h["resultado"].split("-")
-                    for i, n in enumerate(nums):
-                        if n == numero:
-                            st.write(
-                                f"🎯 **{lot}** | 📅 {h['fecha']} | 📍 {POSICION[i]}"
-                            )
-                            encontrado = True
+                    if nums[0] == numero:
+                        st.write(
+                            f"🎯 **{lot}** | 📅 {h['fecha']} | 📍 Primera"
+                        )
+                        encontrado = True
         if not encontrado:
-            st.info("Este número no ha salido en ninguna lotería.")
+            st.info("Este número no ha salido en primera posición.")
 
     for fila in range(4):
         cols = st.columns(25)
         for col in range(25):
             n = f"{fila*25 + col:02d}"
+            c = conteo_primera_posicion(n)
+            color = color_por_conteo(c)
+
+            st.markdown(
+                f"""
+                <style>
+                div[data-testid="stButton"] > button {{
+                    background-color: {color};
+                    color: white;
+                    font-weight: bold;
+                }}
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
             if cols[col].button(n, key=f"g_{n}"):
                 mostrar_detalle(n)
 
