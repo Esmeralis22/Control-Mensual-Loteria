@@ -104,15 +104,15 @@ def celda(num):
     for m in marcas:
         puntos += (
             f"<span style='color:{COLORES[m]};"
-            f"font-size:9px;"
+            f"font-size:10px;"
             f"margin-right:1px;'>●</span>"
         )
 
     return (
         f"<span style='font-size:12px; font-weight:bold;'>{num}</span><br>"
         f"<span style='display:inline-block;"
-        f"height:10px;"
-        f"line-height:10px;"
+        f"height:14px;"
+        f"line-height:14px;"
         f"white-space:nowrap;"
         f"overflow:hidden;'>{puntos}</span>"
     )
@@ -123,9 +123,9 @@ for fila in range(4):
         n = f"{fila*25 + col:02d}"
         cols[col].markdown(
             f"<div style='border:1px solid #ccc;"
-            f"height:45px;"
+            f"height:46px;"
             f"text-align:center;"
-            f"padding-top:4px;"
+            f"padding-top:3px;"
             f"overflow:hidden;'>"
             f"{celda(n)}</div>",
             unsafe_allow_html=True
