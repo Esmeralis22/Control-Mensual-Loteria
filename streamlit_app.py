@@ -126,7 +126,7 @@ html += "</div>"
 st.markdown(html, unsafe_allow_html=True)
 
 
-    st.stop()
+st.stop()
 
 # ================= LOTERÍAS NORMALES =================
 data.setdefault(loteria, {})
@@ -202,5 +202,6 @@ for fila in range(4):
 st.subheader("🗂 Historial del mes")
 for h in historial:
     st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}")
+
 
 
