@@ -102,7 +102,7 @@ def celda(num):
     marcas = panel[num]
     html = f"<b>{num}</b><br>"
     for m in marcas:
-        html += f"<span style='color:{COLORES[m]};font-size:18px'>X</span>"
+        html += f"<span style='color:{COLORES[m]}; font-size:12px;'>●</span> "
     return html
 
 for fila in range(4):
@@ -110,7 +110,7 @@ for fila in range(4):
     for col in range(25):
         n = f"{fila*25 + col:02d}"
         cols[col].markdown(
-            f"<div style='border:1px solid #ccc; padding:6px; text-align:center'>{celda(n)}</div>",
+            f"<div style='border:1px solid #ccc; padding:5px; text-align:center; min-height:40px'>{celda(n)}</div>",
             unsafe_allow_html=True
         )
 
@@ -119,4 +119,6 @@ st.subheader("🗂 Historial del mes")
 
 for h in historial:
     st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}")
+
+
 
