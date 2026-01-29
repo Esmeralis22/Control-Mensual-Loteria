@@ -3,39 +3,20 @@ import json
 import os
 from datetime import datetime
 
-# ================= LOGIN =================
-if "login_ok" not in st.session_state:
-    st.session_state.login_ok = False
-
-if not st.session_state.login_ok:
-    st.title("🔐 Acceso a la aplicación")
-
-    user = st.text_input("Usuario")
-    pwd = st.text_input("Clave", type="password")
-
-    if st.button("Entrar"):
-        if user == "Esteban" and pwd == "15061998":
-            st.session_state.login_ok = True
-            st.rerun()
-        else:
-            st.error("Credenciales incorrectas")
-
-    st.stop()
-
 # ================= CONFIG =================
+st.set_page_config(layout="wide")
 DATA_FILE = "historial_loterias.json"
 
+USUARIO_OK = "Esteban"
+CLAVE_OK = "15061998"
+
 LOTERIAS = [
-    "General",
     "Anguilla 10:00 AM", "Anguilla 1:00 PM", "Anguilla 6:00 PM", "Anguilla 9:00 PM",
     "Primera Dia", "Primera Noche", "Lotedom", "La Suerte MD", "La Suerte 6PM",
     "Real", "Gana Mas", "Florida Dia", "Florida Noche",
-    "New York Dia", "New York Noche",
-    "Loteka", "Leidsa", "Loteria Nacional"
+    "New York Dia", "New York Noche", "Loteka", "Leidsa", "Loteria Nacional",
+    "General"
 ]
-
-COLORES = ["red", "orange", "green"]
-POSICION = ["Primera", "Segunda", "Tercera"]
 
 # ================= DATA =================
 def cargar():
@@ -44,154 +25,121 @@ def cargar():
             return json.load(f)
     return {}
 
-def guardar(data):
+def guardar(d):
     with open(DATA_FILE, "w", encoding="utf8") as f:
-        json.dump(data, f, indent=2)
-
-def nuevo_panel():
-    return {f"{i:02d}": [] for i in range(100)}
-
-# ================= UI =================
-st.set_page_config(layout="wide")
-st.title("📊 Control Mensual de Loterías")
+        json.dump(d, f, indent=2, ensure_ascii=False)
 
 data = cargar()
 
-loteria = st.selectbox("Selecciona la lotería", LOTERIAS)
+# ================= LOGIN =================
+if "login" not in st.session_state:
+    st.session_state.login = False
 
-fecha = datetime.now()
-mes_key = fecha.strftime("%Y-%m")
-fecha_str = fecha.strftime("%d/%m/%Y")
+if not st.session_state.login:
+    st.title("🔐 Acceso")
+    u = st.text_input("Usuario")
+    c = st.text_input("Clave", type="password")
+    if st.button("Entrar"):
+        if u == USUARIO_OK and c == CLAVE_OK:
+            st.session_state.login = True
+            st.rerun()
+        else:
+            st.error("Credenciales incorrectas")
+    st.stop()
 
-# ================= PANEL GENERAL =================
+# ================= UTIL =================
+def panel_html(conteos=None, modo_general=False):
+    html = "<div style='display:grid;grid-template-columns:repeat(25,1fr);gap:4px;'>"
+    for i in range(100):
+        n = f"{i:02d}"
+
+        color = "#2ecc71"  # verde por defecto
+        if modo_general and conteos:
+            c = conteos.get(n, 0)
+            if c >= 5:
+                color = "#e74c3c"
+            elif c >= 3:
+                color = "#f39c12"
+
+        if modo_general:
+            html += f"""
+            <form method="post">
+            <button name="num" value="{n}"
+            style="width:38px;height:30px;
+            background:{color};
+            border:none;border-radius:4px;
+            color:black;font-weight:bold;cursor:pointer;">
+            {n}
+            </button>
+            </form>
+            """
+        else:
+            html += f"""
+            <div style="
+            width:38px;height:30px;
+            border:1px solid #999;
+            text-align:center;
+            font-size:12px;
+            display:flex;
+            align-items:center;
+            justify-content:center;">
+            {n}
+            </div>
+            """
+    html += "</div>"
+    return html
+
+# ================= APP =================
+st.title("📊 Control Mensual de Loterías")
+
+loteria = st.selectbox("Seleccionar lotería", LOTERIAS)
+mes = datetime.now().strftime("%Y-%m")
+
+# ================= GENERAL =================
 if loteria == "General":
+    st.subheader("📌 Control General (Primera Posición)")
 
-    st.subheader("🌐 Control General de Todas las Loterías")
+    conteos = {}
+    for lot, meses in data.items():
+        for m, registros in meses.items():
+            if m != mes:
+                continue
+            for r in registros:
+                n = r["numeros"][0]
+                conteos[n] = conteos.get(n, 0) + 1
 
-    def conteo_primera_posicion(numero):
-        total = 0
+    st.markdown(panel_html(conteos, modo_general=True), unsafe_allow_html=True)
+
+    if "num" in st.experimental_get_query_params():
+        sel = st.experimental_get_query_params()["num"][0]
+        st.subheader(f"📍 Detalle del {sel}")
         for lot, meses in data.items():
-            for mes, info in meses.items():
-                if mes != mes_key:
-                    continue
-                for h in info["historial"]:
-                    nums = h["resultado"].split("-")
-                    if nums[0] == numero:
-                        total += 1
-        return total
-
-    def color_por_conteo(c):
-        if c <= 2:
-            return "#2e7d32"   # verde
-        elif c <= 4:
-            return "#f9a825"   # naranja
-        return "#c62828"       # rojo
-
-    @st.dialog("Detalle del número")
-    def mostrar_detalle(numero):
-        encontrado = False
-        for lot, meses in data.items():
-            for mes, info in meses.items():
-                for h in info["historial"]:
-                    nums = h["resultado"].split("-")
-                    if nums[0] == numero:
-                        st.write(
-                            f"🎯 **{lot}** | 📅 {h['fecha']} | 📍 Primera"
-                        )
-                        encontrado = True
-        if not encontrado:
-            st.info("Este número no ha salido en primera posición.")
-
-    for fila in range(4):
-        cols = st.columns(25)
-        for col in range(25):
-            n = f"{fila*25 + col:02d}"
-            c = conteo_primera_posicion(n)
-            color = color_por_conteo(c)
-
-            st.markdown(
-                f"""
-                <style>
-                div[data-testid="stButton"] > button {{
-                    background-color: {color};
-                    color: white;
-                    font-weight: bold;
-                }}
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
-
-            if cols[col].button(n, key=f"g_{n}"):
-                mostrar_detalle(n)
+            for m, regs in meses.items():
+                for r in regs:
+                    if r["numeros"][0] == sel:
+                        st.write(f"• {lot} | Posición 1 | {r['fecha']}")
 
     st.stop()
 
-# ================= LOTERÍAS NORMALES =================
-data.setdefault(loteria, {})
-data[loteria].setdefault(mes_key, {
-    "panel": nuevo_panel(),
-    "historial": []
-})
-
-panel = data[loteria][mes_key]["panel"]
-historial = data[loteria][mes_key]["historial"]
-
-st.subheader(f"🎯 Lotería seleccionada: **{loteria}**")
-st.caption(f"Mes activo: **{mes_key}** | Fecha del sistema: **{fecha_str}**")
-
-resultado = st.text_input("Resultado (formato xx-xx-xx)", placeholder="56-74-83")
+# ================= NORMAL =================
+st.subheader(f"🎯 {loteria}")
+resultado = st.text_input("Resultado (xx-xx-xx)")
 
 if st.button("Guardar resultado"):
     try:
         nums = resultado.split("-")
-        if len(nums) != 3:
-            raise ValueError
+        assert len(nums) == 3
+        for n in nums:
+            assert 0 <= int(n) <= 99
 
-        for i, n in enumerate(nums):
-            if not n.isdigit() or not (0 <= int(n) <= 99):
-                raise ValueError
-            panel[n].append(i)
-
-        historial.append({
-            "fecha": fecha_str,
-            "resultado": resultado
+        data.setdefault(loteria, {}).setdefault(mes, []).append({
+            "fecha": datetime.now().strftime("%d/%m/%Y"),
+            "numeros": nums
         })
-
         guardar(data)
-        st.success("Resultado guardado correctamente")
-
+        st.success("Resultado guardado")
+        st.rerun()
     except:
         st.error("Formato inválido")
 
-if st.button("🗑️ Eliminar último resultado"):
-    if historial:
-        ultimo = historial.pop()
-        nums = ultimo["resultado"].split("-")
-        for i, n in enumerate(nums):
-            if panel[n]:
-                panel[n].pop()
-        guardar(data)
-        st.rerun()
-
-# ================= PANEL =================
-st.subheader("📌 Panel mensual 00–99")
-
-def celda(num):
-    puntos = ""
-    for m in panel[num]:
-        puntos += f"<span style='color:{COLORES[m]};font-size:10px;'>●</span>"
-    return f"<b>{num}</b><br>{puntos}"
-
-for fila in range(4):
-    cols = st.columns(25)
-    for col in range(25):
-        n = f"{fila*25 + col:02d}"
-        cols[col].markdown(
-            f"<div style='border:1px solid #ccc;height:46px;text-align:center;padding-top:3px'>{celda(n)}</div>",
-            unsafe_allow_html=True
-        )
-
-st.subheader("🗂 Historial del mes")
-for h in historial:
-    st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}")
+st.markdown(panel_html(), unsafe_allow_html=True)
