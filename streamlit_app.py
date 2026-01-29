@@ -48,14 +48,20 @@ if not st.session_state.login:
             st.error("Credenciales incorrectas")
     st.stop()
 
-# ================= PANEL NORMAL =================
+# ================= PANEL LOTERIA =================
 def panel_loteria(registros):
     puntos = {f"{i:02d}": [] for i in range(100)}
 
     for r in registros:
-        if "numeros" not in r or not isinstance(r["numeros"], list):
+        if not isinstance(r, dict):
             continue
-        for i, n in enumerate(r["numeros"]):
+        nums = r.get("numeros")
+        if not isinstance(nums, list):
+            continue
+
+        for i, n in enumerate(nums):
+            if n not in puntos:
+                continue
             if i == 0:
                 puntos[n].append("red")
             elif i == 1:
@@ -64,11 +70,16 @@ def panel_loteria(registros):
                 puntos[n].append("green")
 
     html = "<div style='display:grid;grid-template-columns:repeat(25,1fr);gap:4px;'>"
+
     for i in range(100):
         n = f"{i:02d}"
-        dots = ""
-        for c in puntos[n]:
-            dots += f"<span style='color:{c};font-size:10px'>●</span>"
+        dots = "".join(
+            f"<span style='color:{c};font-size:10px'>●</span>"
+            for c in puntos[n]
+        )
+
+        dots_html = f"<div>{dots}</div>" if dots else ""
+
         html += f"""
         <div style="
         width:38px;height:30px;
@@ -80,15 +91,17 @@ def panel_loteria(registros):
         align-items:center;
         justify-content:center;">
         {n}
-        <div>{dots}</div>
+        {dots_html}
         </div>
         """
+
     html += "</div>"
     return html
 
 # ================= PANEL GENERAL =================
 def panel_general(conteos):
     html = "<div style='display:grid;grid-template-columns:repeat(25,1fr);gap:4px;'>"
+
     for i in range(100):
         n = f"{i:02d}"
         c = conteos.get(n, 0)
@@ -101,16 +114,20 @@ def panel_general(conteos):
             color = "#2ecc71"
 
         html += f"""
-        <form method="post">
-        <button name="num" value="{n}"
-        style="width:38px;height:30px;
+        <a href="?num={n}" style="
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:38px;height:30px;
         background:{color};
-        border:none;border-radius:4px;
-        font-weight:bold;cursor:pointer;">
+        border-radius:4px;
+        font-weight:bold;
+        text-decoration:none;
+        color:black;">
         {n}
-        </button>
-        </form>
+        </a>
         """
+
     html += "</div>"
     return html
 
@@ -129,27 +146,28 @@ if loteria == "General":
             if m != mes_actual:
                 continue
             for r in registros:
-                if "numeros" not in r:
+                if not isinstance(r, dict):
                     continue
-                if not isinstance(r["numeros"], list):
-                    continue
-                if len(r["numeros"]) < 1:
+                nums = r.get("numeros")
+                if not isinstance(nums, list) or not nums:
                     continue
 
-                n = r["numeros"][0]
+                n = nums[0]
                 conteos[n] = conteos.get(n, 0) + 1
 
     st.markdown(panel_general(conteos), unsafe_allow_html=True)
 
-    if "num" in st.experimental_get_query_params():
-        sel = st.experimental_get_query_params()["num"][0]
+    params = st.experimental_get_query_params()
+    if "num" in params:
+        sel = params["num"][0]
         st.subheader(f"📍 Historial del {sel}")
+
         for lot, meses in data.items():
             for m, registros in meses.items():
                 for r in registros:
-                    if "numeros" in r and isinstance(r["numeros"], list):
-                        if r["numeros"][0] == sel:
-                            st.write(f"• {lot} | Posición 1 | {r['fecha']}")
+                    nums = r.get("numeros")
+                    if isinstance(nums, list) and nums and nums[0] == sel:
+                        st.write(f"• {lot} | Posición 1 | {r.get('fecha','')}")
 
     st.stop()
 
@@ -157,9 +175,9 @@ if loteria == "General":
 st.subheader(f"🎯 {loteria}")
 
 resultado = st.text_input("Resultado (xx-xx-xx)")
-col1, col2 = st.columns(2)
+c1, c2 = st.columns(2)
 
-with col1:
+with c1:
     if st.button("Guardar resultado"):
         try:
             nums = resultado.split("-")
@@ -177,7 +195,7 @@ with col1:
         except:
             st.error("Formato inválido")
 
-with col2:
+with c2:
     if st.button("Eliminar último resultado"):
         try:
             data[loteria][mes_actual].pop()
@@ -189,5 +207,3 @@ with col2:
 
 registros = data.get(loteria, {}).get(mes_actual, [])
 st.markdown(panel_loteria(registros), unsafe_allow_html=True)
-
-
