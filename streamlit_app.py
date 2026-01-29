@@ -51,6 +51,17 @@ def guardar(data):
 def nuevo_panel():
     return {f"{i:02d}": [] for i in range(100)}
 
+# 👉 CONTEO GENERAL (SOLO PRIMERA POSICIÓN)
+def conteo_general_primera(numero, data):
+    total = 0
+    for lot, meses in data.items():
+        for mes, info in meses.items():
+            for h in info["historial"]:
+                nums = h["resultado"].split("-")
+                if nums and nums[0] == numero:
+                    total += 1
+    return total
+
 # ================= UI =================
 st.set_page_config(layout="wide")
 st.title("📊 Control Mensual de Loterías")
@@ -75,61 +86,52 @@ if loteria == "General":
             for mes, info in meses.items():
                 for h in info["historial"]:
                     nums = h["resultado"].split("-")
-                    for i, n in enumerate(nums):
-                        if n == numero:
-                            st.write(
-                                f"🎯 **{lot}** | 📅 {h['fecha']} | 📍 {POSICION[i]}"
-                            )
-                            encontrado = True
+                    if numero in nums:
+                        pos = nums.index(numero)
+                        st.write(
+                            f"🎯 **{lot}** | 📅 {h['fecha']} | 📍 {POSICION[pos]}"
+                        )
+                        encontrado = True
         if not encontrado:
             st.info("Este número no ha salido en ninguna lotería.")
 
     for fila in range(4):
-    cols = st.columns(25)
-    for col in range(25):
-        n = f"{fila*25 + col:02d}"
+        cols = st.columns(25)
+        for col in range(25):
+            n = f"{fila*25 + col:02d}"
 
-        c = conteo_general_primera(n)
+            c = conteo_general_primera(n, data)
 
-        if c <= 2:
-            color = "#2ecc71"   # verde
-        elif c <= 4:
-            color = "#f39c12"   # naranja
-        else:
-            color = "#e74c3c"   # rojo
+            if c <= 2:
+                color = "#2ecc71"   # verde
+            elif c <= 4:
+                color = "#f39c12"   # naranja
+            else:
+                color = "#e74c3c"   # rojo
 
-        if cols[col].markdown(
-            f"""
-            <a href="?num={n}" style="
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                height:36px;
-                background:{color};
-                border-radius:6px;
-                font-weight:bold;
-                text-decoration:none;
-                color:black;">
-                {n}
-            </a>
-            """,
-            unsafe_allow_html=True
-        ):
-            pass
+            cols[col].markdown(
+                f"""
+                <a href="?num={n}" style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    height:36px;
+                    background:{color};
+                    border-radius:6px;
+                    font-weight:bold;
+                    text-decoration:none;
+                    color:black;">
+                    {n}
+                </a>
+                """,
+                unsafe_allow_html=True
+            )
 
+    query = st.query_params
+    if "num" in query:
+        mostrar_detalle(query["num"])
 
     st.stop()
-
-def conteo_general_primera(numero):
-    total = 0
-    for lot, meses in data.items():
-        for mes, info in meses.items():
-            for h in info["historial"]:
-                nums = h["resultado"].split("-")
-                if nums and nums[0] == numero:  # SOLO primera posición
-                    total += 1
-    return total
-
 
 # ================= LOTERÍAS NORMALES =================
 data.setdefault(loteria, {})
@@ -164,6 +166,7 @@ if st.button("Guardar resultado"):
 
         guardar(data)
         st.success("Resultado guardado correctamente")
+        st.rerun()
 
     except:
         st.error("Formato inválido")
@@ -185,7 +188,6 @@ def celda(num):
     puntos = ""
     for m in panel[num]:
         puntos += f"<span style='color:{COLORES[m]};font-size:10px;line-height:10px;'>●</span>"
-
     return f"""
     <div style="height:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
         <div style="font-weight:bold;line-height:14px;">{num}</div>
