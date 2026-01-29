@@ -146,8 +146,14 @@ st.subheader("📌 Panel mensual 00–99")
 def celda(num):
     puntos = ""
     for m in panel[num]:
-        puntos += f"<span style='color:{COLORES[m]};font-size:10px;'>●</span>"
-    return f"<b>{num}</b><br>{puntos}"
+        puntos += f"<span style='color:{COLORES[m]};font-size:10px;line-height:10px;'>●</span>"
+
+    return f"""
+    <div style="height:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="font-weight:bold;line-height:14px;">{num}</div>
+        <div style="height:12px;line-height:12px;">{puntos}</div>
+    </div>
+    """
 
 for fila in range(4):
     cols = st.columns(25)
@@ -161,3 +167,4 @@ for fila in range(4):
 st.subheader("🗂 Historial del mes")
 for h in historial:
     st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}")
+
