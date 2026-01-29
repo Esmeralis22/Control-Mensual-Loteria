@@ -95,22 +95,41 @@ if st.button("🗑️ Eliminar último resultado"):
     else:
         st.info("No hay resultados para eliminar")
 
-# ================= PANEL COMPLETO =================
+# ================= PANEL COMPLETO (FIJO) =================
 st.subheader("📌 Panel mensual 00–99")
 
 def celda(num):
     marcas = panel[num]
-    html = f"<b>{num}</b><br>"
+    puntos = ""
     for m in marcas:
-        html += f"<span style='color:{COLORES[m]}; font-size:12px;'>●</span> "
-    return html
+        puntos += f"<span style='color:{COLORES[m]}; font-size:10px;'>●</span>"
+    return f"""
+        <div style="font-size:12px; font-weight:bold;">{num}</div>
+        <div style="
+            height:12px;
+            line-height:12px;
+            white-space:nowrap;
+            overflow:hidden;
+        ">
+            {puntos}
+        </div>
+    """
 
 for fila in range(4):
     cols = st.columns(25)
     for col in range(25):
         n = f"{fila*25 + col:02d}"
         cols[col].markdown(
-            f"<div style='border:1px solid #ccc; padding:5px; text-align:center; min-height:40px'>{celda(n)}</div>",
+            f"""
+            <div style="
+                border:1px solid #ccc;
+                height:45px;
+                text-align:center;
+                padding-top:4px;
+            ">
+                {celda(n)}
+            </div>
+            """,
             unsafe_allow_html=True
         )
 
@@ -119,6 +138,3 @@ st.subheader("🗂 Historial del mes")
 
 for h in historial:
     st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}")
-
-
-
