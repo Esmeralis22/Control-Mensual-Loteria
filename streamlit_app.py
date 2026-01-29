@@ -42,7 +42,6 @@ fecha = datetime.now()
 mes_key = fecha.strftime("%Y-%m")
 fecha_str = fecha.strftime("%d/%m/%Y")
 
-# Inicializar estructuras
 data.setdefault(loteria, {})
 data[loteria].setdefault(mes_key, {
     "panel": nuevo_panel(),
@@ -50,6 +49,7 @@ data[loteria].setdefault(mes_key, {
 })
 
 panel = data[loteria][mes_key]["panel"]
+historial = data[loteria][mes_key]["historial"]
 
 st.subheader(f"🎯 Lotería seleccionada: **{loteria}**")
 st.caption(f"Mes activo: **{mes_key}** | Fecha del sistema: **{fecha_str}**")
@@ -68,7 +68,7 @@ if st.button("Guardar resultado"):
                 raise ValueError
             panel[n].append(i)
 
-        data[loteria][mes_key]["historial"].append({
+        historial.append({
             "fecha": fecha_str,
             "resultado": resultado
         })
@@ -79,27 +79,43 @@ if st.button("Guardar resultado"):
     except:
         st.error("Formato inválido. Usa xx-xx-xx (00 a 99)")
 
-# ================= PANEL =================
+# ================= ELIMINAR RESULTADO =================
+if st.button("🗑️ Eliminar último resultado"):
+    if historial:
+        ultimo = historial.pop()
+        nums = ultimo["resultado"].split("-")
+
+        for i, n in enumerate(nums):
+            if panel[n]:
+                panel[n].pop()
+
+        guardar(data)
+        st.warning("Último resultado eliminado")
+        st.experimental_rerun()
+    else:
+        st.info("No hay resultados para eliminar")
+
+# ================= PANEL COMPLETO =================
 st.subheader("📌 Panel mensual 00–99")
 
 def celda(num):
     marcas = panel[num]
     html = f"<b>{num}</b><br>"
     for m in marcas:
-        html += f"<span style='color:{COLORES[m]};font-size:20px'>X</span>"
+        html += f"<span style='color:{COLORES[m]};font-size:18px'>X</span>"
     return html
 
-for base in [0, 25, 50, 75]:
-    cols = st.columns(4)
-    for i in range(4):
-        n = f"{base + i:02d}"
-        cols[i].markdown(
-            f"<div style='border:1px solid #ccc; padding:10px; text-align:center'>{celda(n)}</div>",
+for fila in range(4):
+    cols = st.columns(25)
+    for col in range(25):
+        n = f"{fila*25 + col:02d}"
+        cols[col].markdown(
+            f"<div style='border:1px solid #ccc; padding:6px; text-align:center'>{celda(n)}</div>",
             unsafe_allow_html=True
         )
 
 # ================= HISTORIAL =================
 st.subheader("🗂 Historial del mes")
 
-for h in data[loteria][mes_key]["historial"]:
+for h in historial:
     st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}")
