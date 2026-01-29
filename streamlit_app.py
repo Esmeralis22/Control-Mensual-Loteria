@@ -84,12 +84,47 @@ if loteria == "General":
         if not encontrado:
             st.info("Este número no ha salido en ninguna lotería.")
 
-    for fila in range(4):
-        cols = st.columns(25)
-        for col in range(25):
-            n = f"{fila*25 + col:02d}"
-            if cols[col].button(n, key=f"g_{n}"):
-                mostrar_detalle(n)
+   # ---------- conteo por primera posición ----------
+conteo = {f"{i:02d}": 0 for i in range(100)}
+
+for lot, meses in data.items():
+    for mes, info in meses.items():
+        for h in info["historial"]:
+            n = h["resultado"].split("-")[0]
+            conteo[n] += 1
+
+# ---------- panel ----------
+html = "<div style='display:grid;grid-template-columns:repeat(25,1fr);gap:6px;'>"
+
+for i in range(100):
+    n = f"{i:02d}"
+    c = conteo[n]
+
+    if c >= 5:
+        color = "#e74c3c"      # rojo
+    elif c >= 3:
+        color = "#f39c12"      # naranja
+    else:
+        color = "#2ecc71"      # verde (0–2 o ninguno)
+
+    html += f"""
+    <a href="?num={n}" style="
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        height:36px;
+        background:{color};
+        border-radius:6px;
+        font-weight:bold;
+        text-decoration:none;
+        color:black;">
+        {n}
+    </a>
+    """
+
+html += "</div>"
+st.markdown(html, unsafe_allow_html=True)
+
 
     st.stop()
 
@@ -167,4 +202,5 @@ for fila in range(4):
 st.subheader("🗂 Historial del mes")
 for h in historial:
     st.write(f"📅 {h['fecha']} → 🎯 {h['resultado']}")
+
 
