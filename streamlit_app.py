@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import pandas as pd
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
@@ -62,7 +63,7 @@ data = cargar()
 
 loteria = st.selectbox("Selecciona la lotería", LOTERIAS)
 
-fecha = datetime.now()
+fecha = datetime.now(ZoneInfo("America/Santo_Domingo"))
 mes_key = fecha.strftime("%Y-%m")
 fecha_str = fecha.strftime("%d/%m/%Y")
 
@@ -230,6 +231,7 @@ if st.button("📤 Generar archivo"):
                     f,
                     file_name=nombre
                 )
+
 
 
 
