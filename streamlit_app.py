@@ -232,21 +232,25 @@ if st.button("📤 Generar archivo"):
                     file_name=nombre
                 )
 
-st.subheader("🛠️ Corrección de fechas (solo usar una vez)")
+st.subheader("🛠️ Corrección especial de fechas")
 
-if st.button("🔁 Corregir 03/02/2026 → 02/02/2026"):
-    corregidos = 0
+if st.checkbox("⚠️ Confirmo que deseo corregir la PRIMERA fecha 02/02/2026"):
+    if st.button("🔁 Cambiar primera 02/02/2026 → 01/02/2026"):
+        cambios = 0
 
-    for loteria, meses in data.items():
-        for mes, info in meses.items():
-            for h in info.get("historial", []):
-                if h.get("fecha") == "03/02/2026":
-                    h["fecha"] = "02/02/2026"
-                    corregidos += 1
+        for loteria, meses in data.items():
+            for mes, info in meses.items():
+                encontrado = False
+                for h in info.get("historial", []):
+                    if h.get("fecha") == "02/02/2026" and not encontrado:
+                        h["fecha"] = "01/02/2026"
+                        encontrado = True
+                        cambios += 1
 
-    guardar(data)
+        guardar(data)
+        st.success(f"✅ Corrección aplicada. Registros modificados: {cambios}")
 
-    st.success(f"✅ Corrección aplicada. Registros corregidos: {corregidos}")
+
 
 
 
